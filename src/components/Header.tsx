@@ -35,15 +35,15 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Brand & Subtitle */}
         <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
           <div className="flex items-center gap-4">
-            <div className="relative h-11 w-auto flex items-center">
+            <div className="relative flex items-center">
               <Image
                 src="/Yucachain_Logo.png"
                 alt="YucaChain Logo"
-                width={180}
-                height={42}
+                width={300}
+                height={129}
                 priority
-                style={{ width: 'auto', height: '42px' }}
-                className="object-contain"
+                className="h-12 sm:h-14 md:h-16 w-auto object-contain"
+                style={{ width: 'auto' }}
               />
             </div>
 
@@ -66,11 +66,10 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="md:hidden">
             <button
               onClick={onToggleMode}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all ${
-                settings.isSimulation
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all ${settings.isSimulation
                   ? 'bg-amber-50 text-amber-900 border-amber-300'
                   : 'bg-emerald-50 text-emerald-900 border-emerald-300'
-              }`}
+                }`}
             >
               {settings.isSimulation ? 'SIMULATOR' : 'LIVE ESP32'}
             </button>
@@ -104,11 +103,10 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Safety mode status pill */}
           {status && (
             <div
-              className={`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all ${
-                status.safetyMode
+              className={`hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all ${status.safetyMode
                   ? 'bg-rose-50 text-rose-900 border-rose-300 animate-pulse'
                   : 'bg-emerald-50 text-emerald-900 border-emerald-200'
-              }`}
+                }`}
             >
               {status.safetyMode ? (
                 <>
@@ -127,17 +125,15 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Mode Switch Button (Desktop) */}
           <button
             onClick={onToggleMode}
-            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all hover:shadow-sm ${
-              settings.isSimulation
+            className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all hover:shadow-sm ${settings.isSimulation
                 ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
                 : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
-            }`}
+              }`}
             title="Switch between Test Simulator and Live ESP32 connection"
           >
             <span
-              className={`w-2.5 h-2.5 rounded-full ${
-                settings.isSimulation ? 'bg-amber-500' : 'bg-emerald-600'
-              }`}
+              className={`w-2.5 h-2.5 rounded-full ${settings.isSimulation ? 'bg-amber-500' : 'bg-emerald-600'
+                }`}
             />
             {settings.isSimulation ? 'Simulator Active' : 'Live ESP32 Connected'}
           </button>
