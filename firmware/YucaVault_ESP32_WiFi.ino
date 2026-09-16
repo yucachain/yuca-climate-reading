@@ -7,9 +7,9 @@
   Automated environmental control for fresh cassava storage
   with real-time WiFi telemetry endpoint for the YucaVault Web Dashboard.
 
-  SENSOR LOCATIONS:
-    TOP:    A1 (GPIO 13), A2 (GPIO 14), A3 (GPIO 16)
-    BOTTOM: B1 (GPIO 17), B2 (GPIO 19), B3 (GPIO 21)
+  SENSOR LOCATIONS (TWO SIDES - 3-POINT DIAGONAL SLANT):
+    LEFT SIDE:  A1 (Top Slant, GPIO 13), A2 (Mid Slant, GPIO 14), A3 (Bot Slant, GPIO 16)
+    RIGHT SIDE: B1 (Top Slant, GPIO 17), B2 (Mid Slant, GPIO 19), B3 (Bot Slant, GPIO 21)
 
   SENSOR TYPE:
     DHT22
@@ -92,8 +92,8 @@ const char* sensorNames[NUM_SENSORS] = {
 };
 
 const char* sensorLocations[NUM_SENSORS] = {
-  "TOP", "TOP", "TOP",
-  "BOTTOM", "BOTTOM", "BOTTOM"
+  "LEFT", "LEFT", "LEFT",
+  "RIGHT", "RIGHT", "RIGHT"
 };
 
 const int sensorPins[NUM_SENSORS] = {

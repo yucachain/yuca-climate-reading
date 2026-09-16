@@ -66,56 +66,102 @@ export const ClimateChart: React.FC<ClimateChartProps> = ({
   chartHistories,
 }) => {
   const [showTargets, setShowTargets] = useState(true);
-  const [downloadMode, setDownloadMode] = useState<'current' | 'all'>('current');
+
+  // Helper to extract sensor temperature & humidity for a point
+  const getSensorReadings = (pt: ChartPoint, sensorId: string) => {
+    if (!pt.sensors || pt.sensors.length === 0) {
+      return { temp: '--', hum: '--' };
+    }
+    const s = pt.sensors.find((item) => item.id.toUpperCase() === sensorId.toUpperCase());
+    if (!s) return { temp: '--', hum: '--' };
+    if (!s.valid) return { temp: 'OFFLINE', hum: 'OFFLINE' };
+    return {
+      temp: s.temperature.toFixed(1),
+      hum: s.humidity.toFixed(1),
+    };
+  };
 
   // Export CSV Function
   const handleDownloadCsv = (mode: 'current' | 'all') => {
-    let rows: Array<string[]> = [];
-    // CSV Header
+    const rows: Array<string[]> = [];
+
+    // Comprehensive CSV Header with Average and Individual Sensors
     rows.push([
-      'Timestamp',
+      'Timestamp (ISO)',
       'Time',
       'Unit Name',
       'Unit Code',
       'Unit Type',
-      'Temperature (C)',
-      'Humidity (%)',
-      'Fan Status',
-      'Pump Status',
+      'Average Temperature (C)',
+      'Average Humidity (%)',
+      'Sensor A1 [Left - Top Diagonal] Temp (C)',
+      'Sensor A1 [Left - Top Diagonal] Humidity (%)',
+      'Sensor A2 [Left - Mid Diagonal] Temp (C)',
+      'Sensor A2 [Left - Mid Diagonal] Humidity (%)',
+      'Sensor A3 [Left - Bottom Diagonal] Temp (C)',
+      'Sensor A3 [Left - Bottom Diagonal] Humidity (%)',
+      'Sensor B1 [Right - Top Diagonal] Temp (C)',
+      'Sensor B1 [Right - Top Diagonal] Humidity (%)',
+      'Sensor B2 [Right - Mid Diagonal] Temp (C)',
+      'Sensor B2 [Right - Mid Diagonal] Humidity (%)',
+      'Sensor B3 [Right - Bottom Diagonal] Temp (C)',
+      'Sensor B3 [Right - Bottom Diagonal] Humidity (%)',
+      'Ventilation Fan Status',
+      'Mist Pump Status',
     ]);
+
+    const buildRow = (pt: ChartPoint, uName: string, uCode: string, uType: string) => {
+      const a1 = getSensorReadings(pt, 'A1');
+      const a2 = getSensorReadings(pt, 'A2');
+      const a3 = getSensorReadings(pt, 'A3');
+      const b1 = getSensorReadings(pt, 'B1');
+      const b2 = getSensorReadings(pt, 'B2');
+      const b3 = getSensorReadings(pt, 'B3');
+
+      return [
+        new Date(pt.timestamp).toISOString(),
+        pt.time,
+        uName,
+        uCode,
+        uType === 'transport' ? 'Transport Vault' : 'Stationary Hub',
+        pt.avgTemp.toFixed(1),
+        pt.avgHumidity.toFixed(1),
+        a1.temp,
+        a1.hum,
+        a2.temp,
+        a2.hum,
+        a3.temp,
+        a3.hum,
+        b1.temp,
+        b1.hum,
+        b2.temp,
+        b2.hum,
+        b3.temp,
+        b3.hum,
+        pt.fanActive ? 'ON' : 'OFF',
+        pt.pumpActive ? 'ON' : 'OFF',
+      ];
+    };
 
     if (mode === 'current') {
       const activeUnit = allUnits.find((u) => u.id === selectedUnitId);
       const points = data;
       points.forEach((pt) => {
-        rows.push([
-          new Date(pt.timestamp).toISOString(),
-          pt.time,
-          activeUnit?.name || unitName,
-          activeUnit?.code || '',
-          activeUnit?.type === 'transport' ? 'Transport Vault' : 'Stationary Hub',
-          pt.avgTemp.toFixed(1),
-          pt.avgHumidity.toFixed(1),
-          pt.fanActive ? 'ON' : 'OFF',
-          pt.pumpActive ? 'ON' : 'OFF',
-        ]);
+        rows.push(
+          buildRow(
+            pt,
+            activeUnit?.name || unitName,
+            activeUnit?.code || '',
+            activeUnit?.type || 'transport'
+          )
+        );
       });
     } else {
       // Export all units
       allUnits.forEach((u) => {
         const points = chartHistories[u.id] || [];
         points.forEach((pt) => {
-          rows.push([
-            new Date(pt.timestamp).toISOString(),
-            pt.time,
-            u.name,
-            u.code,
-            u.type === 'transport' ? 'Transport Vault' : 'Stationary Hub',
-            pt.avgTemp.toFixed(1),
-            pt.avgHumidity.toFixed(1),
-            pt.fanActive ? 'ON' : 'OFF',
-            pt.pumpActive ? 'ON' : 'OFF',
-          ]);
+          rows.push(buildRow(pt, u.name, u.code, u.type));
         });
       });
     }

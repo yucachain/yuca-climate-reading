@@ -15,9 +15,9 @@ const ESP32_SKETCH = `/*
   Automated environmental control for fresh cassava storage.
   Runs identically across YucaVault (Transport) and YucaHub (Stationary).
 
-  SENSOR LOCATIONS:
-    TOP:    A1 (GPIO 13), A2 (GPIO 14), A3 (GPIO 16)
-    BOTTOM: B1 (GPIO 17), B2 (GPIO 19), B3 (GPIO 21)
+  SENSOR LOCATIONS (TWO SIDES - 3-POINT DIAGONAL SLANT):
+    LEFT SIDE:  A1 (Top Slant, GPIO 13), A2 (Mid Slant, GPIO 14), A3 (Bot Slant, GPIO 16)
+    RIGHT SIDE: B1 (Top Slant, GPIO 17), B2 (Mid Slant, GPIO 19), B3 (Bot Slant, GPIO 21)
 
   ACTUATORS:
     FAN  -> GPIO 18
@@ -74,7 +74,7 @@ DHT* sensors[NUM_SENSORS] = {
 };
 
 const char* sensorNames[NUM_SENSORS] = { "A1", "A2", "A3", "B1", "B2", "B3" };
-const char* sensorLocations[NUM_SENSORS] = { "TOP", "TOP", "TOP", "BOTTOM", "BOTTOM", "BOTTOM" };
+const char* sensorLocations[NUM_SENSORS] = { "LEFT", "LEFT", "LEFT", "RIGHT", "RIGHT", "RIGHT" };
 const int sensorPins[NUM_SENSORS] = { A1_PIN, A2_PIN, A3_PIN, B1_PIN, B2_PIN, B3_PIN };
 
 float currentTemps[NUM_SENSORS];
@@ -257,11 +257,11 @@ export const Esp32CodeModal: React.FC<Esp32CodeModalProps> = ({ isOpen, onClose 
         {/* Pinout Quick Cards */}
         <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <span className="text-slate-500 text-[10px] uppercase block font-bold">Top DHT22</span>
+            <span className="text-slate-500 text-[10px] uppercase block font-bold">Left Wall (Diagonal)</span>
             <span className="text-emerald-950 font-mono font-black">A1: 13, A2: 14, A3: 16</span>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-            <span className="text-slate-500 text-[10px] uppercase block font-bold">Bottom DHT22</span>
+            <span className="text-slate-500 text-[10px] uppercase block font-bold">Right Wall (Diagonal)</span>
             <span className="text-emerald-950 font-mono font-black">B1: 17, B2: 19, B3: 21</span>
           </div>
           <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200">

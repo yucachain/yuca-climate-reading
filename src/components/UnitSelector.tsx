@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Truck, Warehouse, AlertTriangle, ShieldCheck, Plus, Filter } from 'lucide-react';
+import { Truck, Warehouse, AlertTriangle, ShieldCheck, Plus } from 'lucide-react';
 import { ColdChainUnit, ChamberStatus } from '@/lib/types';
 
 interface UnitSelectorProps {

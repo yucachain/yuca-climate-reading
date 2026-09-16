@@ -77,7 +77,9 @@ export default function YucaChainDashboard() {
 
   // Track units status in ref to avoid infinite re-render loops
   const unitsStatusRef = useRef<Record<string, ChamberStatus>>({});
-  unitsStatusRef.current = unitsStatus;
+  useEffect(() => {
+    unitsStatusRef.current = unitsStatus;
+  }, [unitsStatus]);
 
   // Telemetry update function
   const updateTelemetry = useCallback(async () => {
@@ -190,6 +192,15 @@ export default function YucaChainDashboard() {
               avgHumidity: st.averageHumidity,
               fanActive: st.fanState ? 1 : 0,
               pumpActive: st.pumpState ? 1 : 0,
+              sensors: st.sensors?.map((s) => ({
+                id: s.id,
+                location: s.location,
+                position: s.position,
+                pin: s.pin,
+                valid: s.valid,
+                temperature: s.temperature,
+                humidity: s.humidity,
+              })),
             };
 
             const existing = nextHistories[uId] || [];
@@ -212,19 +223,27 @@ export default function YucaChainDashboard() {
 
   // Polling loop
   useEffect(() => {
-    updateTelemetry();
+    const timer = setTimeout(() => {
+      updateTelemetry();
+    }, 0);
 
     const interval = setInterval(() => {
       updateTelemetry();
     }, settings.pollInterval);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [updateTelemetry, settings.pollInterval]);
 
   // Initial welcome log
   useEffect(() => {
-    addLog('global', 'system', 'YucaChain Climate Control Dashboard Ready.', 'info');
-    addLog('global', 'system', 'Monitoring YucaVault #1, YucaVault #2, and YucaHub Station.', 'success');
+    const timer = setTimeout(() => {
+      addLog('global', 'system', 'YucaChain Climate Control Dashboard Ready.', 'info');
+      addLog('global', 'system', 'Monitoring YucaVault #1, YucaVault #2, and YucaHub Station.', 'success');
+    }, 0);
+    return () => clearTimeout(timer);
   }, [addLog]);
 
   // Sensor toggle in simulator for currently active unit

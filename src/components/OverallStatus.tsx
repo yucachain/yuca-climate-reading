@@ -242,7 +242,7 @@ export const OverallStatus: React.FC<OverallStatusProps> = ({ status }) => {
               </div>
               <div>
                 <h3 className="text-base sm:text-lg font-black text-emerald-950">Sensor Health</h3>
-                <span className="text-xs sm:text-sm text-slate-600 font-semibold">6 Sensors (3 Top, 3 Bottom)</span>
+                <span className="text-xs sm:text-sm text-slate-600 font-semibold">6 Sensors (3 Left, 3 Right Diagonal)</span>
               </div>
             </div>
             <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">

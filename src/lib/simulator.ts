@@ -29,7 +29,8 @@ export const INITIAL_UNITS: ColdChainUnit[] = [
 
 export interface SimSensorConfig {
   id: string;
-  location: 'TOP' | 'BOTTOM';
+  location: 'LEFT' | 'RIGHT';
+  position: 'TOP' | 'MIDDLE' | 'BOTTOM';
   pin: number;
   baseTemp: number;
   baseHumidity: number;
@@ -37,12 +38,12 @@ export interface SimSensorConfig {
 }
 
 const DEFAULT_SENSORS: SimSensorConfig[] = [
-  { id: 'A1', location: 'TOP', pin: 13, baseTemp: 25.2, baseHumidity: 87.1, enabled: true },
-  { id: 'A2', location: 'TOP', pin: 14, baseTemp: 25.4, baseHumidity: 87.6, enabled: true },
-  { id: 'A3', location: 'TOP', pin: 16, baseTemp: 25.8, baseHumidity: 88.0, enabled: true },
-  { id: 'B1', location: 'BOTTOM', pin: 17, baseTemp: 24.8, baseHumidity: 86.4, enabled: true },
-  { id: 'B2', location: 'BOTTOM', pin: 19, baseTemp: 25.0, baseHumidity: 86.9, enabled: true },
-  { id: 'B3', location: 'BOTTOM', pin: 21, baseTemp: 25.3, baseHumidity: 87.4, enabled: true },
+  { id: 'A1', location: 'LEFT', position: 'TOP', pin: 13, baseTemp: 25.2, baseHumidity: 87.1, enabled: true },
+  { id: 'A2', location: 'LEFT', position: 'MIDDLE', pin: 14, baseTemp: 25.4, baseHumidity: 87.6, enabled: true },
+  { id: 'A3', location: 'LEFT', position: 'BOTTOM', pin: 16, baseTemp: 25.8, baseHumidity: 88.0, enabled: true },
+  { id: 'B1', location: 'RIGHT', position: 'TOP', pin: 17, baseTemp: 24.8, baseHumidity: 86.4, enabled: true },
+  { id: 'B2', location: 'RIGHT', position: 'MIDDLE', pin: 19, baseTemp: 25.0, baseHumidity: 86.9, enabled: true },
+  { id: 'B3', location: 'RIGHT', position: 'BOTTOM', pin: 21, baseTemp: 25.3, baseHumidity: 87.4, enabled: true },
 ];
 
 class UnitInstance {
@@ -121,6 +122,7 @@ class UnitInstance {
       return {
         id: s.id,
         location: s.location,
+        position: s.position,
         pin: s.pin,
         valid: s.enabled,
         temperature: s.enabled ? t : 0.0,

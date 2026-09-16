@@ -9,9 +9,13 @@ export interface ColdChainUnit {
   esp32Ip: string;
 }
 
+export type SensorLocation = 'LEFT' | 'RIGHT' | 'TOP' | 'BOTTOM';
+export type SensorPosition = 'TOP' | 'MIDDLE' | 'BOTTOM';
+
 export interface SensorData {
   id: string;
-  location: 'TOP' | 'BOTTOM';
+  location: SensorLocation;
+  position?: SensorPosition;
   pin: number;
   valid: boolean;
   temperature: number;
@@ -38,6 +42,16 @@ export interface ChamberStatus {
   timestamp?: number;
 }
 
+export interface SensorReadingSnapshot {
+  id: string;
+  location?: SensorLocation;
+  position?: SensorPosition;
+  pin?: number;
+  valid: boolean;
+  temperature: number;
+  humidity: number;
+}
+
 export interface ChartPoint {
   time: string;
   timestamp: number;
@@ -45,6 +59,7 @@ export interface ChartPoint {
   avgHumidity: number;
   fanActive: number;
   pumpActive: number;
+  sensors?: SensorReadingSnapshot[];
 }
 
 export interface ActivityLog {
