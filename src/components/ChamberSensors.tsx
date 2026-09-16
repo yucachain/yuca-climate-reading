@@ -268,41 +268,54 @@ export const ChamberSensors: React.FC<ChamberSensorsProps> = ({
         )}
       </div>
 
-      {/* LEFT SIDE SENSORS SECTION */}
-      <div className="bg-white rounded-3xl p-6 border border-emerald-900/15 border-l-6 border-l-emerald-600 shadow-xs">
-        <div className="flex items-center justify-between mb-4.5">
-          <div className="flex items-center gap-2.5">
-            <span className="w-3 h-3 rounded-full bg-emerald-600" />
-            <h3 className="text-sm sm:text-base font-black uppercase tracking-wide text-emerald-950">
-              Left Side of Vault &bull; Sensors A1, A2, A3
-            </h3>
+      {/* TWO COLUMNS: LEFT SIDE AND RIGHT SIDE BESIDE EACH OTHER */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* LEFT SIDE SENSORS SECTION */}
+        <div className="bg-white rounded-3xl p-6 border border-emerald-900/15 border-l-6 border-l-emerald-600 shadow-xs">
+          <div className="flex items-center justify-between mb-4.5 pb-3 border-b border-emerald-900/10">
+            <div className="flex items-center gap-2.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 shadow-xs" />
+              <div>
+                <h3 className="text-base font-black uppercase tracking-wide text-emerald-950">
+                  Left Side of Vault &bull; Sensors A1, A2, A3
+                </h3>
+                <span className="text-xs text-slate-500 font-medium block">
+                  Port wall &bull; Arranged diagonally: Top, Middle, Bottom
+                </span>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-emerald-900 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+              Port Side
+            </span>
           </div>
-          <span className="text-xs sm:text-sm text-slate-600 font-medium">
-            Port wall &bull; Arranged diagonally: Top, Middle, Bottom
-          </span>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4.5">
-          {finalLeftSensors.map((s, idx) => renderSensorCard(s, idx, 'Left'))}
-        </div>
-      </div>
-
-      {/* RIGHT SIDE SENSORS SECTION */}
-      <div className="bg-white rounded-3xl p-6 border border-amber-500/25 border-l-6 border-l-amber-500 shadow-xs">
-        <div className="flex items-center justify-between mb-4.5">
-          <div className="flex items-center gap-2.5">
-            <span className="w-3 h-3 rounded-full bg-amber-500" />
-            <h3 className="text-sm sm:text-base font-black uppercase tracking-wide text-emerald-950">
-              Right Side of Vault &bull; Sensors B1, B2, B3
-            </h3>
+          <div className="space-y-4">
+            {finalLeftSensors.map((s, idx) => renderSensorCard(s, idx, 'Left'))}
           </div>
-          <span className="text-xs sm:text-sm text-slate-600 font-medium">
-            Starboard wall &bull; Arranged diagonally: Top, Middle, Bottom
-          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4.5">
-          {finalRightSensors.map((s, idx) => renderSensorCard(s, idx, 'Right'))}
+        {/* RIGHT SIDE SENSORS SECTION */}
+        <div className="bg-white rounded-3xl p-6 border border-teal-900/15 border-l-6 border-l-teal-600 shadow-xs">
+          <div className="flex items-center justify-between mb-4.5 pb-3 border-b border-teal-900/10">
+            <div className="flex items-center gap-2.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-teal-600 shadow-xs" />
+              <div>
+                <h3 className="text-base font-black uppercase tracking-wide text-emerald-950">
+                  Right Side of Vault &bull; Sensors B1, B2, B3
+                </h3>
+                <span className="text-xs text-slate-500 font-medium block">
+                  Starboard wall &bull; Arranged diagonally: Top, Middle, Bottom
+                </span>
+              </div>
+            </div>
+            <span className="text-xs font-bold text-teal-900 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200">
+              Starboard Side
+            </span>
+          </div>
+
+          <div className="space-y-4">
+            {finalRightSensors.map((s, idx) => renderSensorCard(s, idx, 'Right'))}
+          </div>
         </div>
       </div>
     </div>
