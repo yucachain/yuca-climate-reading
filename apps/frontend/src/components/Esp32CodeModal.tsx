@@ -1,23 +1,30 @@
-/*
+'use client';
+
+import React, { useState } from 'react';
+import { X, Copy, Check, Code2, Cpu, Radio, Network } from 'lucide-react';
+
+interface Esp32CodeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const ESP32_SKETCH = `/*
   ============================================================
-  YucaVault & YucaHub Climate Control System - Dual Mode IoT Edition
+  YucaVault & YucaHub Climate Control System - Dual Mode IoT
   ============================================================
 
   Supports:
     - 2 Transport Vaults (vault-1: TR-01, vault-2: TR-02)
     - 1 Stationary Hub (hub-1: ST-01)
 
-  COMMUNICATION MODES (HYBRID IOT GATEWAY):
-    1. Polling Mode: Express backend queries GET http://<ESP32-IP>/api/status
-    2. Direct Push Mode: ESP32 POSTs JSON telemetry directly to:
+  HYBRID IOT GATEWAY COMMUNICATION:
+    1. Polling: Express backend queries GET http://<ESP32-IP>/api/status
+    2. Direct Push: ESP32 POSTs JSON telemetry directly to:
        POST http://<SERVER-IP>:5000/api/telemetry/ingest
 
   SENSOR LOCATIONS (TWO SIDES - 3-POINT DIAGONAL SLANT):
     LEFT SIDE:  A1 (Top Slant, GPIO 13), A2 (Mid Slant, GPIO 14), A3 (Bot Slant, GPIO 16)
     RIGHT SIDE: B1 (Top Slant, GPIO 17), B2 (Mid Slant, GPIO 19), B3 (Bot Slant, GPIO 21)
-
-  SENSOR TYPE:
-    DHT22
 
   ACTUATORS:
     FAN  -> GPIO 18
@@ -43,25 +50,22 @@ const char* ssid     = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 // ============================================================
-// BACKEND SERVER CONFIGURATION (For Direct Push Mode)
+// BACKEND SERVER (For Direct Push Mode)
 // ============================================================
 const bool  ENABLE_DIRECT_PUSH = true;
-const char* BACKEND_SERVER_URL = "http://192.168.1.100:5000/api/telemetry/ingest"; // Express server IP:5000
+const char* BACKEND_SERVER_URL = "http://192.168.1.100:5000/api/telemetry/ingest";
 const unsigned long PUSH_INTERVAL_MS = 3000;
 
 WebServer server(80);
 
-// ============================================================
-// DHT SENSOR CONFIGURATION
-// ============================================================
 #define DHTTYPE DHT22
 
-// LEFT WALL SENSORS
+// LEFT WALL PINS
 #define A1_PIN 13
 #define A2_PIN 14
 #define A3_PIN 16
 
-// RIGHT WALL SENSORS
+// RIGHT WALL PINS
 #define B1_PIN 17
 #define B2_PIN 19
 #define B3_PIN 21
@@ -73,13 +77,11 @@ WebServer server(80);
 #define NUM_SENSORS 6
 #define MIN_VALID_SENSORS 4
 
-// STORAGE CLIMATE THRESHOLDS FOR CASSAVA
 const float TEMP_MIN = 20.0;
 const float TEMP_MAX = 30.0;
 const float HUMIDITY_LOW = 85.0;
 const float HUMIDITY_HIGH = 90.0;
 
-// HYSTERESIS
 const float FAN_TEMP_ON = 27.0;
 const float FAN_TEMP_OFF = 24.0;
 const float FAN_HUMIDITY_ON = 90.0;
@@ -118,7 +120,6 @@ unsigned long lastReadTime = 0;
 unsigned long lastPushTime = 0;
 const unsigned long READ_INTERVAL = 3000;
 
-// Forward declarations
 void readAndControlSystem();
 void handleGetStatus();
 void handleRoot();
@@ -128,32 +129,21 @@ void pushTelemetryToBackend();
 
 void setup() {
   Serial.begin(115200);
-  Serial.println();
-  Serial.println("================================================");
-  Serial.printf("   YucaChain IoT Node: %s (%s)\n", UNIT_NAME, UNIT_CODE);
-  Serial.println("================================================");
-
   pinMode(FAN_PIN, OUTPUT);
   pinMode(PUMP_PIN, OUTPUT);
 
-  // Safe default: Fan ON, Pump OFF
   digitalWrite(FAN_PIN, HIGH);
   fanState = true;
   digitalWrite(PUMP_PIN, LOW);
   pumpState = false;
 
-  Serial.println("Initializing DHT22 sensors...");
   for (int i = 0; i < NUM_SENSORS; i++) {
     sensors[i]->begin();
     currentTemps[i] = 0.0;
     currentHumidities[i] = 0.0;
     currentValids[i] = false;
-    Serial.printf("Sensor %s on GPIO %d ready.\n", sensorNames[i], sensorPins[i]);
   }
 
-  // Connect WiFi
-  Serial.print("Connecting to WiFi: ");
-  Serial.println(ssid);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
@@ -164,41 +154,26 @@ void setup() {
     attempts++;
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n✅ WiFi connected!");
-    Serial.print("Local IP Address: ");
-    Serial.println(WiFi.localIP());
-    Serial.println("Polling Endpoint: http://" + WiFi.localIP().toString() + "/api/status");
-  } else {
-    Serial.println("\n⚠️ WiFi connection timeout. Operating in standalone autonomous mode.");
-  }
-
-  // WebServer routes for backend polling
   server.on("/", HTTP_GET, handleRoot);
   server.on("/api/status", HTTP_GET, handleGetStatus);
   server.onNotFound(handleNotFound);
 
   server.enableCORS(true);
   server.begin();
-  Serial.println("HTTP WebServer active on port 80.");
 
   readAndControlSystem();
   lastReadTime = millis();
 }
 
 void loop() {
-  // Handle incoming HTTP polling requests from Express backend
   server.handleClient();
 
   unsigned long now = millis();
-
-  // Control cycle
   if (now - lastReadTime >= READ_INTERVAL) {
     lastReadTime = now;
     readAndControlSystem();
   }
 
-  // Direct Push to Express Backend
   if (ENABLE_DIRECT_PUSH && WiFi.status() == WL_CONNECTED && (now - lastPushTime >= PUSH_INTERVAL_MS)) {
     lastPushTime = now;
     pushTelemetryToBackend();
@@ -227,7 +202,6 @@ void readAndControlSystem() {
     totalHumidity += h;
   }
 
-  // Failsafe check (< 4 sensors responding)
   if (validSensorCount < MIN_VALID_SENSORS) {
     safetyMode = true;
     pumpState = false;
@@ -243,7 +217,6 @@ void readAndControlSystem() {
   averageTemperature = totalTemperature / validSensorCount;
   averageHumidity = totalHumidity / validSensorCount;
 
-  // FAN Hysteresis
   if (averageTemperature >= FAN_TEMP_ON || averageHumidity >= FAN_HUMIDITY_ON) {
     fanState = true;
     if (averageTemperature >= FAN_TEMP_ON && averageHumidity >= FAN_HUMIDITY_ON) {
@@ -260,17 +233,16 @@ void readAndControlSystem() {
     fanReason = "Conditions in deadband (24-27°C / 85-90% RH)";
   }
 
-  // PUMP Logic
   if (averageTemperature <= TEMP_MIN) {
     pumpState = false;
-    pumpReason = "Chamber too cold (<= 20°C). Pump OFF";
+    pumpReason = "Chamber cold (<= 20°C). Pump OFF";
   } else if (averageTemperature >= TEMP_MAX) {
     pumpState = true;
     pumpReason = "Chamber hot (>= 30°C). Cooling Mist ON";
   } else {
     if (averageHumidity < HUMIDITY_LOW) {
       pumpState = true;
-      pumpReason = "Low Humidity (< 85%). Humidifying cassava";
+      pumpReason = "Low Humidity (< 85%). Humidifying";
     } else if (averageHumidity >= HUMIDITY_LOW && averageHumidity < HUMIDITY_HIGH) {
       pumpReason = "Preferred RH Zone (85-90%). State maintained";
     } else {
@@ -285,30 +257,30 @@ void readAndControlSystem() {
 
 String buildTelemetryJson() {
   String json = "{";
-  json += "\"system\":\"YucaChain - " + String(UNIT_NAME) + "\",";
-  json += "\"unitId\":\"" + String(UNIT_ID) + "\",";
-  json += "\"code\":\"" + String(UNIT_CODE) + "\",";
-  json += "\"uptime\":" + String(millis()) + ",";
-  json += "\"validSensors\":" + String(validSensorCount) + ",";
-  json += "\"minValidSensors\":" + String(MIN_VALID_SENSORS) + ",";
-  json += "\"totalSensors\":" + String(NUM_SENSORS) + ",";
-  json += "\"safetyMode\":" + String(safetyMode ? "true" : "false") + ",";
-  json += "\"averageTemperature\":" + String(averageTemperature, 2) + ",";
-  json += "\"averageHumidity\":" + String(averageHumidity, 2) + ",";
-  json += "\"fanState\":" + String(fanState ? "true" : "false") + ",";
-  json += "\"pumpState\":" + String(pumpState ? "true" : "false") + ",";
-  json += "\"fanReason\":\"" + fanReason + "\",";
-  json += "\"pumpReason\":\"" + pumpReason + "\",";
-  json += "\"sensors\":[";
+  json += "\\"system\\":\\"YucaChain - " + String(UNIT_NAME) + "\\",";
+  json += "\\"unitId\\":\\"" + String(UNIT_ID) + "\\",";
+  json += "\\"code\\":\\"" + String(UNIT_CODE) + "\\",";
+  json += "\\"uptime\\":" + String(millis()) + ",";
+  json += "\\"validSensors\\":" + String(validSensorCount) + ",";
+  json += "\\"minValidSensors\\":" + String(MIN_VALID_SENSORS) + ",";
+  json += "\\"totalSensors\\":" + String(NUM_SENSORS) + ",";
+  json += "\\"safetyMode\\":" + String(safetyMode ? "true" : "false") + ",";
+  json += "\\"averageTemperature\\":" + String(averageTemperature, 2) + ",";
+  json += "\\"averageHumidity\\":" + String(averageHumidity, 2) + ",";
+  json += "\\"fanState\\":" + String(fanState ? "true" : "false") + ",";
+  json += "\\"pumpState\\":" + String(pumpState ? "true" : "false") + ",";
+  json += "\\"fanReason\\":\\"" + fanReason + "\\",";
+  json += "\\"pumpReason\\":\\"" + pumpReason + "\\",";
+  json += "\\"sensors\\":[";
   for (int i = 0; i < NUM_SENSORS; i++) {
     if (i > 0) json += ",";
     json += "{";
-    json += "\"id\":\"" + String(sensorNames[i]) + "\",";
-    json += "\"location\":\"" + String(sensorLocations[i]) + "\",";
-    json += "\"pin\":" + String(sensorPins[i]) + ",";
-    json += "\"valid\":" + String(currentValids[i] ? "true" : "false") + ",";
-    json += "\"temperature\":" + String(currentTemps[i], 1) + ",";
-    json += "\"humidity\":" + String(currentHumidities[i], 1);
+    json += "\\"id\\":\\"" + String(sensorNames[i]) + "\\",";
+    json += "\\"location\\":\\"" + String(sensorLocations[i]) + "\\",";
+    json += "\\"pin\\":" + String(sensorPins[i]) + ",";
+    json += "\\"valid\\":" + String(currentValids[i] ? "true" : "false") + ",";
+    json += "\\"temperature\\":" + String(currentTemps[i], 1) + ",";
+    json += "\\"humidity\\":" + String(currentHumidities[i], 1);
     json += "}";
   }
   json += "]}";
@@ -319,16 +291,7 @@ void pushTelemetryToBackend() {
   HTTPClient http;
   http.begin(BACKEND_SERVER_URL);
   http.addHeader("Content-Type", "application/json");
-
-  String payload = buildTelemetryJson();
-  int httpResponseCode = http.POST(payload);
-
-  if (httpResponseCode > 0) {
-    // Success
-    Serial.printf("[Direct Push] Status: %d\n", httpResponseCode);
-  } else {
-    Serial.printf("[Direct Push Error] HTTP code: %s\n", http.errorToString(httpResponseCode).c_str());
-  }
+  http.POST(buildTelemetryJson());
   http.end();
 }
 
@@ -351,5 +314,110 @@ void handleRoot() {
 }
 
 void handleNotFound() {
-  server.send(404, "application/json", "{\"error\":\"Not Found\"}");
+  server.send(404, "application/json", "{\\"error\\":\\"Not Found\\"}");
 }
+`;
+
+export const Esp32CodeModal: React.FC<Esp32CodeModalProps> = ({ isOpen, onClose }) => {
+  const [copied, setCopied] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(ESP32_SKETCH);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-emerald-950/25 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-4xl rounded-3xl border border-emerald-900/15 p-6 sm:p-7 shadow-2xl space-y-5 relative max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <Code2 className="w-6 h-6 text-emerald-700" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black text-emerald-950">ESP32 Arduino C++ Firmware</h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                  Hybrid IoT Mode
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                Flash this sketch to each ESP32 (YucaVault #1, YucaVault #2, and YucaHub Station)
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* 3-Unit Fleet Quick Guide */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 shrink-0">
+          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+            <div className="font-extrabold text-emerald-950 flex items-center gap-1.5 mb-1">
+              <Radio className="w-3.5 h-3.5 text-emerald-700" />
+              Node 1: YucaVault #1 (Transit)
+            </div>
+            <p className="text-slate-500 font-mono text-[11px]">UNIT_ID = &quot;vault-1&quot;</p>
+            <p className="text-slate-500 font-mono text-[11px]">UNIT_CODE = &quot;TR-01&quot;</p>
+            <p className="text-emerald-800 font-mono text-[11px] font-bold">IP: 192.168.1.151</p>
+          </div>
+          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+            <div className="font-extrabold text-emerald-950 flex items-center gap-1.5 mb-1">
+              <Radio className="w-3.5 h-3.5 text-emerald-700" />
+              Node 2: YucaVault #2 (Transit)
+            </div>
+            <p className="text-slate-500 font-mono text-[11px]">UNIT_ID = &quot;vault-2&quot;</p>
+            <p className="text-slate-500 font-mono text-[11px]">UNIT_CODE = &quot;TR-02&quot;</p>
+            <p className="text-emerald-800 font-mono text-[11px] font-bold">IP: 192.168.1.152</p>
+          </div>
+          <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+            <div className="font-extrabold text-emerald-950 flex items-center gap-1.5 mb-1">
+              <Network className="w-3.5 h-3.5 text-emerald-700" />
+              Node 3: YucaHub Station (Central)
+            </div>
+            <p className="text-slate-500 font-mono text-[11px]">UNIT_ID = &quot;hub-1&quot;</p>
+            <p className="text-slate-500 font-mono text-[11px]">UNIT_CODE = &quot;ST-01&quot;</p>
+            <p className="text-emerald-800 font-mono text-[11px] font-bold">IP: 192.168.1.150</p>
+          </div>
+        </div>
+
+        {/* Code Block Container */}
+        <div className="relative flex-1 min-h-[300px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-slate-100 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800 shrink-0">
+            <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
+              <Cpu className="w-4 h-4 text-emerald-400" />
+              <span>firmware/YucaVault_ESP32_WiFi.ino</span>
+            </div>
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-xs"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Copy Code</span>
+                </>
+              )}
+            </button>
+          </div>
+          <pre className="p-4 text-xs font-mono overflow-auto flex-1 text-slate-300 leading-relaxed selection:bg-emerald-800 selection:text-white">
+            <code>{ESP32_SKETCH}</code>
+          </pre>
+        </div>
+      </div>
+    </div>
+  );
+};

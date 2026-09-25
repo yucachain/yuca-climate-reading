@@ -6,13 +6,13 @@ import { ChamberStatus, SensorData } from '@/lib/types';
 
 interface ChamberSensorsProps {
   status: ChamberStatus | null;
-  isSimulation: boolean;
+  isSimulation?: boolean;
   onToggleSensor?: (sensorId: string, enabled: boolean) => void;
 }
 
 export const ChamberSensors: React.FC<ChamberSensorsProps> = ({
   status,
-  isSimulation,
+  isSimulation = false,
   onToggleSensor,
 }) => {
   if (!status) return null;

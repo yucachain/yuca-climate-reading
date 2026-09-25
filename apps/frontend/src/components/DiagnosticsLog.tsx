@@ -60,7 +60,7 @@ export const DiagnosticsLog: React.FC<DiagnosticsLogProps> = ({ logs, onClearLog
                   {log.timestamp}
                 </span>
                 <span className="text-xs uppercase font-black px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-300 text-emerald-900 shrink-0 font-sans">
-                  {log.unitId.toUpperCase()}
+                  {(log.unitId || 'SYSTEM').toUpperCase()}
                 </span>
                 <span className={`break-words text-xs sm:text-sm leading-relaxed ${badgeStyle}`}>
                   {log.message}

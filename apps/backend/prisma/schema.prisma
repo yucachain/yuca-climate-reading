@@ -1,0 +1,86 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Unit {
+  id                  String             @id
+  name                String
+  code                String             @unique
+  type                String             // "transport" | "stationary"
+  locationDescription String
+  esp32Ip             String
+  isActive            Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  telemetry           TelemetryReading[]
+  activityLogs        ActivityLog[]
+
+  @@map("units")
+}
+
+model TelemetryReading {
+  id                 String          @id @default(cuid())
+  unitId             String
+  unit               Unit            @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  uptime             BigInt          @default(0)
+  validSensors       Int
+  minValidSensors    Int             @default(4)
+  totalSensors       Int             @default(6)
+  safetyMode         Boolean         @default(false)
+  averageTemperature Float
+  averageHumidity    Float
+  fanState           Boolean
+  pumpState          Boolean
+  fanReason          String          @default("")
+  pumpReason         String          @default("")
+  createdAt          DateTime        @default(now())
+
+  sensors            SensorReading[]
+
+  @@index([unitId, createdAt])
+  @@map("telemetry_readings")
+}
+
+model SensorReading {
+  id                 String           @id @default(cuid())
+  telemetryReadingId String
+  telemetryReading   TelemetryReading @relation(fields: [telemetryReadingId], references: [id], onDelete: Cascade)
+  sensorCode         String           // e.g. "A1", "A2", "A3", "B1", "B2", "B3"
+  location           String           // "LEFT" | "RIGHT"
+  position           String?          // "TOP" | "MIDDLE" | "BOTTOM"
+  pin                Int
+  valid              Boolean
+  temperature        Float
+  humidity           Float
+
+  @@index([telemetryReadingId])
+  @@map("sensor_readings")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  unitId    String?
+  unit      Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  type      String   // "fan" | "pump" | "sensor" | "safety" | "system"
+  message   String
+  severity  String   // "info" | "success" | "warning" | "danger"
+  createdAt DateTime @default(now())
+
+  @@index([unitId, createdAt])
+  @@map("activity_logs")
+}
+
+model SystemSetting {
+  id             String   @id @default("default")
+  pollInterval   Int      @default(3000)
+  pollingEnabled Boolean  @default(true)
+  updatedAt      DateTime @updatedAt
+
+  @@map("system_settings")
+}
